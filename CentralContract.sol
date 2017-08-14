@@ -67,6 +67,8 @@ contract NextLevelToken is ERC20Interface {
     uint public constant decimals = 0;
     uint256 _totalSupply = 175000000;
     uint public blackoutEnd = now + 10 weeks;
+    uint public devBlackout = now + 72 weeks;
+    address public devWallet;
     
     //Owner of this contract
     address public owner;
@@ -107,12 +109,21 @@ contract NextLevelToken is ERC20Interface {
         return balances[_owner];
     }
     
+    //Set the developer wallet and lock it
+    function setDevWallet(address wallet) onlyOwner {
+        if (devWallet != 0x0) revert();
+        devWallet = wallet;
+    }
+    
      // Transfer the balance from owner's account to another account
     function transfer(address _to, uint256 _amount) returns (bool success) {
         if (frozenAccount[msg.sender]) revert();
         if (msg.sender != owner) {
             if(now <= blackoutEnd) revert();
         }    
+        if (msg.sender == devWallet) {
+            if(now <= devBlackout) revert();
+        }
         
         if (balances[msg.sender] >= _amount 
             && _amount > 0
@@ -141,6 +152,9 @@ contract NextLevelToken is ERC20Interface {
         if (msg.sender != owner) {
             if(now <= blackoutEnd) revert();
         }  
+        if (msg.sender == devWallet) {
+            if(now <= devBlackout) revert();
+        }
         
         if (balances[_from] >= _amount
             && allowed[_from][msg.sender] >= _amount
@@ -177,6 +191,11 @@ contract NextLevelToken is ERC20Interface {
     //Get Blackout End
     function getBlackoutEnd() constant returns (uint) {
         return blackoutEnd;
+    }
+    
+    //Get Dev Blackout End
+    function getDevBlackoutEnd() constant returns (uint) {
+        return devBlackout;
     }
     
 }
